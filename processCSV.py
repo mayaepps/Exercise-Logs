@@ -16,7 +16,7 @@ feelingTags = []
 exerciseTagValues = []
 feelingTagValues = []
 
-with open("data/Coco Nutritionist: Exercise Logs 2_December 7, 2019_18.18.csv") as csvfile:
+with open("../data/test_data.csv") as csvfile:
     csvreader = csv.reader(csvfile)
 
     #list of all the fields
@@ -43,8 +43,14 @@ with open("data/Coco Nutritionist: Exercise Logs 2_December 7, 2019_18.18.csv") 
         exerciseTags.append(row[indexExerciseTag2])
         feelingTags.append(row[indexFeelingTag1])
         feelingTags.append(row[indexFeelingTag2])
-        exerciseTagValues.append(row[indexExerciseTagValue1])
-        exerciseTagValues.append(row[indexExerciseTagValue2])
+        if row[indexExerciseTagValue1] == "" or row[indexExerciseTagValue1] == "Other":
+            exerciseTagValues.append("Other: " + row[indexOther1])
+        else:
+            exerciseTagValues.append(row[indexExerciseTagValue1])
+        if row[indexExerciseTagValue2] == "" or row[indexExerciseTagValue2] == "Other":
+            exerciseTagValues.append("Other: " + row[indexOther2])
+        else:
+            exerciseTagValues.append(row[indexExerciseTagValue2])
         feelingTagValues.append(row[indexFeelingTagValue1])
         feelingTagValues.append(row[indexFeelingTagValue2])
 
