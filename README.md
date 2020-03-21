@@ -1,5 +1,7 @@
 # Exercise Logs for Coco Nutritionist
 
+By Maya Epps under the mentorship of Dr. Mandy Korpusik
+
 ## Processing Qualtrics CSV:
 
 ### processCSVforMajorityVote.py 
