@@ -21,7 +21,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 torch.manual_seed(1)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 '''
 Loads all sentences from the Pandas DataFrame as (word, POS, tag).
@@ -52,6 +51,7 @@ Parameters: embedding_dim, hidden_dim
 '''
 class FFTagger(nn.Module):
 
+    # TODO: try adding more hidden layers
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
         super(FFTagger, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
@@ -156,56 +156,62 @@ if __name__ == '__main__':
     classes = np.unique(df.Tag.values).tolist()
     tag_to_ix = load_tag_dict(classes)
     OUTPUT_DIM = len(classes)
-    EMBEDDING_DIM = 50
-    HIDDEN_DIM = 64
+    EMBEDDING_DIM = 50 # TODO: try different embedding dimensions (e.g., 100, 200, 300, etc.)
+    HIDDEN_DIM = 64 # TODO: try different hidden dimensions (e.g., 128, 256, 512, etc.)
 
     # TODO: try lowercasing everything
     sentences = SentenceGetter(df).sentences
     word_to_ix = load_word_dict(sentences)
-    train_sents, test_sents = train_test_split(sentences, test_size=0.2, random_state=0, shuffle=True)
-
+    train_sents, test_sents = train_test_split(sentences, test_size=0.1, random_state=0, shuffle=True)
+    train_sents, val_sents = train_test_split(train_sents, test_size=0.1, random_state=0, shuffle=True)
 
     ### TRAINING THE MODEL ###
     # TODO: BERT, XL-Net, RoBERTa, ALBERT
     # TODO: load pre-trained embedding matrix
-    model = FFTagger(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
+    model = LSTMTagger(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
+    # for GPU training
+    device = 'cpu'
+    if torch.cuda.is_available():
+        model.cuda()
+        device = 'cuda'
+
     loss_function = nn.NLLLoss()
+    # TODO: try different learning rates (e.g., lr=0.001, 0.001, etc.)
     optimizer = optim.SGD(model.parameters(), lr=0.1)
     prev_loss = None
     epochs = 1000
 
-    # TODO: add GPU support
     for epoch in range(epochs):
-        losses = []
         for sentence in train_sents:
-            # Step 1. Remember that Pytorch accumulates gradients.
-            # We need to clear them out before each instance
+            # Step 1. Clear out any accumulated gradients.
             model.zero_grad()
 
-            # Step 2. Get our inputs ready for the network, that is, turn them into
-            # Tensors of word indices.
+            # Step 2. Convert data into tensors of word and tag indices
             x, y = prepare_sequence(sentence, word_to_ix, tag_to_ix)
 
-            # Step 3. Run our forward pass.
-            tag_scores = model(x)
+            # Step 3. Run the forward pass
+            tag_scores = model(x.to(device))
 
-            # Step 4. Compute the loss, gradients, and update the parameters by
-            #  calling optimizer.step()
-            loss = loss_function(tag_scores, y)
+            # Step 4. Compute the loss and gradients, and update the parameters
+            loss = loss_function(tag_scores, y.to(device))
             loss.backward()
             optimizer.step()
-            losses.append(loss.item())
-        loss = np.mean(losses)
 
-        # print loss every 10 epochs
-        if epoch % 10 == 0:
-            print('epoch {}, loss {}'.format(epoch, loss))
+        val_losses = []
+        with torch.no_grad():
+            for sentence in val_sents:
+                x, y = prepare_sequence(sentence, word_to_ix, tag_to_ix)
+                tag_scores = model(x.to(device))
+                loss = loss_function(tag_scores, y.to(device))
+                val_losses.append(loss.item())
+            val_loss = np.mean(val_losses)
+        print('epoch {}, loss {}'.format(epoch, val_loss))
 
-            # early stopping: break out if loss after 10 epochs is worse
-            if prev_loss and loss > prev_loss:
-                break
+        # early stopping: break out if loss after 10 epochs is worse
+        if prev_loss and val_loss > prev_loss:
+            break
 
-            prev_loss = loss
+        prev_loss = val_loss
 
 
     ### EVALUATION ###
@@ -213,9 +219,9 @@ if __name__ == '__main__':
         true_y = []
         pred_y = []
         # get argmax (i.e., tag with highest prob) for each word in test set
-        for sentence in test_sents:
+        for sentence in val_sents:
             x, y = prepare_sequence(sentence, word_to_ix, tag_to_ix)
-            tag_scores = model(x).data.numpy()
+            tag_scores = model(x.to(device)).cpu().data.numpy()
             true_y.extend(y.data.numpy())
             pred_y.extend(np.argmax(tag_scores, axis=1))
 
@@ -223,4 +229,6 @@ if __name__ == '__main__':
         prec, rec, f1, _ = precision_recall_fscore_support(true_y, pred_y)
         for label, prec, rec, f1 in zip(classes, prec, rec, f1):
             print(label, prec, rec, f1)
-        print('\naverage scores:', precision_recall_fscore_support(true_y, pred_y, average='micro'))
+        print('\nLSTM average scores:', precision_recall_fscore_support(true_y, pred_y, average='micro'))
+
+        # TODO: compare test set results to CRF and majority vote (i.e., ensure same metric and test set)
