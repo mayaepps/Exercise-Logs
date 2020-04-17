@@ -1,9 +1,9 @@
 '''
-processCSV.py
+processCSVforCRF.py
 Maya Epps
-January, 2020
+April 16, 2020
 Processes the CSV files from Qualtrics containing the results of
-HITs. Creates a CSV file called dataWithPOS.csv that is used for CRFwithPOS.py
+HITs. Creates 2 CSV files (train and test) with POS tags for both CRFs
 '''
 
 import csv
@@ -12,8 +12,9 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 
-input_csv_file_path = "./../data/1502 exercise data.csv"
-output_csv_file_path = "./dataWithPOS.csv"
+input_csv_file_path = "../../data/unprocessedFinalData.csv"
+train_output_csv_file_path = "../trainDataWithPOS.csv"
+test_output_csv_file_path = "../testDataWithPOS.csv"
 
 logs = []
 exerciseTags = []
@@ -97,27 +98,38 @@ def get_tag(token, sentence, exercises, feelings):
     if token not in feelings and token not in exercises:
             return "O"
 
+
+
+
 # writes the new csv file, which has four columns: the sentence number,
 # the word, the POS, and the word's tag
-with open(output_csv_file_path, 'w') as csvfile:
+def createCSV(path, rangeOfData):
+    with open(path, 'w') as csvfile:
 
-    sentence_number = 1
+        sentence_number = 1
 
-    log_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        log_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-    log_writer.writerow(["Sentence #", "Word", "POS", "Tag"])
+        log_writer.writerow(["Sentence #", "Word", "POS", "Tag"])
 
-    for i in range(len(logs)):
+        for i in rangeOfData:
 
-        ex_tokens = [token.text for token in nlp(exerciseTags[i])]
-        feel_tokens = [token.text for token in nlp(feelingTags[i])]
-        tokenized_sentence = nlp(logs[i])
-        list_tokenized_sentence = [token.text for token in nlp(logs[i])]
+            ex_tokens = [token.text for token in nlp(exerciseTags[i])]
+            feel_tokens = [token.text for token in nlp(feelingTags[i])]
+            tokenized_sentence = nlp(logs[i])
+            list_tokenized_sentence = [token.text for token in nlp(logs[i])]
 
-        for token in tokenized_sentence:
-            tag = get_tag(token.text, list_tokenized_sentence, ex_tokens, feel_tokens)
+            for token in tokenized_sentence:
+                tag = get_tag(token.text, list_tokenized_sentence, ex_tokens, feel_tokens)
 
 
-            log_writer.writerow(["Sentence: " + str(sentence_number), token.text, token.pos_, tag])
+                log_writer.writerow(["Sentence: " + str(sentence_number), token.text, token.pos_, tag])
 
-        sentence_number += 1
+            sentence_number += 1
+
+
+
+TRAIN_LENGTH = (int)(0.8 * len(logs))
+
+createCSV(train_output_csv_file_path, range(0, TRAIN_LENGTH))
+createCSV(test_output_csv_file_path, range(TRAIN_LENGTH, len(logs)))

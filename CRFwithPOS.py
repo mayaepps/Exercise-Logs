@@ -13,25 +13,32 @@ from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
 from collections import Counter
 
-df = pd.read_csv('dataWithPOS.csv', encoding = "ISO-8859-1")
-df = df[:100000]
+df = pd.read_csv('../trainDataWithPOS.csv', encoding = "ISO-8859-1")
+dfTest = pd.read_csv('../testDataWithPOS.csv', encoding = "ISO-8859-1")
 
 df = df.fillna(method='ffill')
-df['Sentence #'].nunique(), df.Word.nunique(), df.Tag.nunique()
+dfTest = dfTest.fillna(method='ffill')
+# df['Sentence #'].nunique(), df.Word.nunique(), df.Tag.nunique()
 
 df.groupby('Word').size().reset_index(name='counts')
+dfTest.groupby('Word').size().reset_index(name='counts')
 
 X = df.drop('Word', axis=1)
+Xtest = dfTest.drop('Word', axis=1)
 v = DictVectorizer(sparse=False)
 X = v.fit_transform(X.to_dict('records'))
+Xtest = v.fit_transform(Xtest.to_dict('records'))
 y = df.Tag.values
+yTest = dfTest.Tag.values
 
-classes = np.unique(y)
-classes = classes.tolist()
-
-new_classes = classes.copy()
-new_classes.pop()
-new_classes
+# classes = np.unique(y)
+# classes = classes.tolist()
+#
+# new_classes = classes.copy()
+# new_classes.pop()
+#
+# new_classes_test = classesTest.copy()
+# new_classes_test.pop()
 
 
 class SentenceGetter(object):
@@ -107,14 +114,21 @@ def sent2tokens(sent):
     return [token for token, postag, label in sent]
 
 
-X = [sent2features(s) for s in sentences]
-y = [sent2labels(s) for s in sentences]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+getter = SentenceGetter(df)
+sentences = getter.sentences
 
+getterTest = SentenceGetter(dfTest)
+sentencesTest = getterTest.sentences
+
+X_train = [sent2features(s) for s in sentences]
+y_train = [sent2labels(s) for s in sentences]
+X_test = [sent2features(s) for s in sentencesTest]
+y_test = [sent2labels(s) for s in sentencesTest]
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
 
 crf = sklearn_crfsuite.CRF(
     algorithm='lbfgs',
-    c1=0.1,
+    c1=0.2,
     c2=0.1,
     max_iterations=100,
     all_possible_transitions=True
@@ -131,4 +145,5 @@ y_pred = crf.predict(X_test)
 #         print(prediction, ' should be ')
 #         print(label)
 
-print(metrics.flat_classification_report(y_test, y_pred, labels = new_classes))
+print(metrics.flat_classification_report(y_test, y_pred))
+#labels = new_classes

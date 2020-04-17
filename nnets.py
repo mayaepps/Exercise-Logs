@@ -14,6 +14,8 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import classification_report
+from sklearn_crfsuite import metrics
 
 import torch
 import torch.nn as nn
@@ -152,7 +154,8 @@ def load_word_dict(sentences):
 if __name__ == '__main__':
 
     ### LOADING THE DATA ###
-    df = pd.read_csv('dataWithPOS.csv', encoding = "ISO-8859-1")
+    df = pd.read_csv('../trainDataWithPOS.csv', encoding = "ISO-8859-1")
+    dfTest = pd.read_csv('../testDataWithPOS.csv', encoding = "ISO-8859-1")
     classes = np.unique(df.Tag.values).tolist()
     tag_to_ix = load_tag_dict(classes)
     OUTPUT_DIM = len(classes)
@@ -161,14 +164,17 @@ if __name__ == '__main__':
 
     # TODO: try lowercasing everything
     sentences = SentenceGetter(df).sentences
+    testSentences = SentenceGetter(dfTest).sentences
     word_to_ix = load_word_dict(sentences)
-    train_sents, test_sents = train_test_split(sentences, test_size=0.1, random_state=0, shuffle=True)
-    train_sents, val_sents = train_test_split(train_sents, test_size=0.1, random_state=0, shuffle=True)
+    # train_sents, test_sents = train_test_split(sentences, test_size=0.2, random_state=0, shuffle=True)
+    train_sents = sentences
+    test_sents = testSentences
+    train_sents, val_sents = train_test_split(train_sents, test_size=0.2, random_state=0, shuffle=True)
 
     ### TRAINING THE MODEL ###
     # TODO: BERT, XL-Net, RoBERTa, ALBERT
     # TODO: load pre-trained embedding matrix
-    model = LSTMTagger(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
+    model = CNNTagger(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
     # for GPU training
     device = 'cpu'
     if torch.cuda.is_available():
@@ -229,6 +235,10 @@ if __name__ == '__main__':
         prec, rec, f1, _ = precision_recall_fscore_support(true_y, pred_y)
         for label, prec, rec, f1 in zip(classes, prec, rec, f1):
             print(label, prec, rec, f1)
-        print('\nLSTM average scores:', precision_recall_fscore_support(true_y, pred_y, average='micro'))
+
+
+        print('\nLSTM average scores:', precision_recall_fscore_support(true_y, pred_y, average='weighted'))
+        # print(metrics.flat_classification_report(true_y, pred_y))
+
 
         # TODO: compare test set results to CRF and majority vote (i.e., ensure same metric and test set)

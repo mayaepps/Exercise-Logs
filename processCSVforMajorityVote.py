@@ -1,9 +1,9 @@
 '''
-processCSV.py
+processCSVforMajorityVote.py
 Maya Epps
-October 4, 2019
+April 17, 2019
 Processes the CSV files from Qualtrics containing the results of
-HITs. Creates a CSV file called majorityVoteData.csv that is used for mostCommonSemTag.py
+HITs. Creates 2 CSV files (train and test) that are used for majorityVote.py
 '''
 
 import csv
@@ -15,8 +15,11 @@ feelingTags = []
 exerciseTagValues = []
 feelingTagValues = []
 
+TRAIN_DATA_PATH = '../trainMajorityVoteData.csv'
+TEST_DATA_PATH = '../testMajorityVoteData.csv'
 
-with open("./../data/1502 exercise data.csv") as csvfile:
+
+with open("../../data/unprocessedFinalData.csv") as csvfile:
     csvreader = csv.reader(csvfile)
 
     #list of all the fields
@@ -46,7 +49,7 @@ with open("./../data/1502 exercise data.csv") as csvfile:
     # however, this didn't work as well, so we seperated the two types of logs
     for row in islice(csvreader, 2, None):
 
-        # new questions (spereate exercise and feeling logs)
+        # new questions (separate exercise and feeling logs)
         if row[indexOldLog1] == ("") and row[indexOldLog2] == (""):
             logs.append(row[indexExerciseLog1] + " " + row[indexFeelingLog1])
             logs.append(row[indexExerciseLog2] + " " + row[indexFeelingLog2])
@@ -79,12 +82,25 @@ for i in range(len(logs)):
     exerciseTags[i] = exerciseTags[i].strip().lower()
     logs[i] = logs[i].strip().lower()
 
-# writes the new csv file, which has three columns: the sentence (log),
+
+TRAIN_LENGTH = train_length = (int)(0.8 * len(logs));
+
+# writes the new TRAIN csv file, which has three columns: the sentence (log),
 # the word selected/tagged as exercise, and the word(s) selected/tagged as how they felt
 # during/after the exercise
-with open('majorityVoteData.csv', 'w') as csvfile:
+with open(TRAIN_DATA_PATH, 'w') as csvfile:
 
     log_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     log_writer.writerow(["Log", "Exercise Tag", "Feeling Tag"])
-    for i in range(len(logs)):
+
+    for i in range(0, TRAIN_LENGTH):
+        log_writer.writerow([logs[i], exerciseTags[i], feelingTags[i]])
+
+
+# create the TEST csv file
+with open(TEST_DATA_PATH, 'w') as csvfile:
+
+    log_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    log_writer.writerow(["Log", "Exercise Tag", "Feeling Tag"])
+    for i in range(TRAIN_LENGTH, len(logs)):
         log_writer.writerow([logs[i], exerciseTags[i], feelingTags[i]])

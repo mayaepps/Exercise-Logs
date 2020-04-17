@@ -21,7 +21,7 @@ from itertools import islice
 
 nlp = spacy.load("en_core_web_sm")
 
-data_file_path = "majorityVoteData.csv"
+data_file_path = "../majorityVoteData.csv"
 
 all_words = {}
 final_words = {}
