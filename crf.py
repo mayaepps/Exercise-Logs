@@ -34,18 +34,9 @@ y = df.Tag.values
 yTest = dfTest.Tag.values
 
 
-classes = np.unique(df.Tag.values).tolist()
-# classes = np.unique(y)
-# classes = classes.tolist()
-#
-# classesTest = np.unique(yTest)
-# classesTest = classesTest.tolist()
-#
-# new_classes = classes.copy()
-# new_classes.pop()
-#
-# new_classes_test = classesTest.copy()
-# new_classes_test.pop()
+new_classes = classes.copy()
+new_classes.pop()
+
 
 
 class SentenceGetter(object):
@@ -140,17 +131,5 @@ crf.fit(X_train, y_train)
 
 
 y_pred = crf.predict(X_test)
-
-# y_test = MultiLabelBinarizer(y_test)
-# y_pred = MultiLabelBinarizer(y_pred)
-# y_test.fit(classes)
-# y_pred.fit(classes)
-# y_test = mlb.fit(y_test)
-# y_train = mlb.fit(y_pred)
-
-
-print(y_test, y_pred)
-print(metrics.flat_classification_report(y_test, y_pred))
-# print(precision_recall_fscore_support(y_test, y_pred, average='weighted'))
-
-# , labels = new_classes
+print(metrics.flat_classification_report(y_test, y_pred, labels=new_classes))
+print(metrics.flat_classification_report(y_test, y_pred, labels=classes))
