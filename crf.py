@@ -31,7 +31,7 @@ classes = classes.tolist()
 
 new_classes = classes.copy()
 new_classes.pop()
-new_classes
+
 
 
 class SentenceGetter(object):
@@ -120,4 +120,5 @@ crf = sklearn_crfsuite.CRF(
 crf.fit(X_train, y_train)
 
 y_pred = crf.predict(X_test)
-print(metrics.flat_classification_report(y_test, y_pred, labels = new_classes))
+print(metrics.flat_classification_report(y_test, y_pred, labels=new_classes))
+print(metrics.flat_classification_report(y_test, y_pred, labels=classes))

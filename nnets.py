@@ -166,7 +166,6 @@ if __name__ == '__main__':
     train_sents, val_sents = train_test_split(train_sents, test_size=0.1, random_state=0, shuffle=True)
 
     ### TRAINING THE MODEL ###
-    # TODO: BERT, XL-Net, RoBERTa, ALBERT
     # TODO: load pre-trained embedding matrix
     model = LSTMTagger(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
     # for GPU training
@@ -225,10 +224,16 @@ if __name__ == '__main__':
             true_y.extend(y.data.numpy())
             pred_y.extend(np.argmax(tag_scores, axis=1))
 
-        # compute precision, recall, and F1 score
+        # compute precision, recall, and F1 score (with and without 'O' tag)
         prec, rec, f1, _ = precision_recall_fscore_support(true_y, pred_y)
         for label, prec, rec, f1 in zip(classes, prec, rec, f1):
             print(label, prec, rec, f1)
-        print('\nLSTM average scores:', precision_recall_fscore_support(true_y, pred_y, average='micro'))
-
+        print('weighted average:', precision_recall_fscore_support(true_y, pred_y, average='weighted'), '\n')
+        
+        classes.remove('O')
+        labels = [i for i in range(len(classes))]
+        prec, rec, f1, _ = precision_recall_fscore_support(true_y, pred_y, labels=labels)
+        for label, prec, rec, f1 in zip(classes, prec, rec, f1):
+            print(label, prec, rec, f1)
+        print(precision_recall_fscore_support(true_y, pred_y, labels=labels, average='weighted'))
         # TODO: compare test set results to CRF and majority vote (i.e., ensure same metric and test set)
