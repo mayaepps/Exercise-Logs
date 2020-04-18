@@ -34,6 +34,7 @@ y = df.Tag.values
 yTest = dfTest.Tag.values
 
 
+classes = np.unique(df.Tag.values).tolist()
 new_classes = classes.copy()
 new_classes.pop()
 
