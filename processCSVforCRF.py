@@ -6,15 +6,17 @@ Processes the CSV files from Qualtrics containing the results of
 HITs. Creates 2 CSV files (train and test) with POS tags for both CRFs
 '''
 
-import csv
+import csv, json
 from itertools import islice
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
 
-input_csv_file_path = "../../data/unprocessedFinalData.csv"
-train_output_csv_file_path = "../trainDataWithPOS.csv"
-test_output_csv_file_path = "../testDataWithPOS.csv"
+input_csv_file_path = "unprocessedFinalData.csv"
+train_output_csv_file_path = "trainDataWithPOS.csv"
+test_output_csv_file_path = "testDataWithPOS.csv"
+train_output_values_file_path = "trainDataValues.json"
+test_output_values_file_path = "testDataValues.json"
 
 logs = []
 exerciseTags = []
@@ -23,7 +25,7 @@ exerciseTagValues = []
 feelingTagValues = []
 
 
-with open(input_csv_file_path) as csvfile:
+with open(input_csv_file_path,encoding='cp1252') as csvfile:
     csvreader = csv.reader(csvfile)
 
     #list of all the fields
@@ -50,8 +52,7 @@ with open(input_csv_file_path) as csvfile:
     # builds the lists (logs, exerciseTags, feelingTags, exerciseTagValues, feelingTagValues)
     # note: we initially had the exercise log and the feeling logs combined in ONE log
     # however, this didn't work as well, so we seperated the two types of logs and concatinate them here
-    for row in islice(csvreader, 2, None):
-
+    for row in islice(csvreader, 1, None, 2):
         if row[indexOldLog1] == ("") and row[indexOldLog2] == (""):
             logs.append(row[indexExerciseLog1] + " " + row[indexFeelingLog1])
             logs.append(row[indexExerciseLog2] + " " + row[indexFeelingLog2])
@@ -128,8 +129,32 @@ def createCSV(path, rangeOfData):
             sentence_number += 1
 
 
+def createJSON(path, rangeOfData):
+    data = {} # maps from tokens to tagged segments and exercise/feeling values
+    for i in rangeOfData:
+        list_tokenized_sentence = " ".join([token.text for token in nlp(logs[i])])
+        ex_tokens = " ".join([token.text for token in nlp(exerciseTags[i])])
+        feel_tokens = " ".join([token.text for token in nlp(feelingTags[i])])
+        exercise = exerciseTagValues[i]
+        feeling = feelingTagValues[i]
+        data[i] = {'sentence':list_tokenized_sentence}
+        data[i]['exercise segment'] = ex_tokens
+        data[i]['feeling segment'] = feel_tokens
+        data[i]['exercise value'] = exercise
+        data[i]['feeling value'] = int(feeling)
+
+    print('Number of samples:', len(data))
+
+    # write to output json file
+    with open(path, 'w') as outfile:
+        json.dump(data, outfile)
+
+
 
 TRAIN_LENGTH = (int)(0.8 * len(logs))
 
-createCSV(train_output_csv_file_path, range(0, TRAIN_LENGTH))
-createCSV(test_output_csv_file_path, range(TRAIN_LENGTH, len(logs)))
+# createCSV(train_output_csv_file_path, range(0, TRAIN_LENGTH))
+# createCSV(test_output_csv_file_path, range(TRAIN_LENGTH, len(logs)))
+
+createJSON(train_output_values_file_path, range(0, TRAIN_LENGTH))
+createJSON(test_output_values_file_path, range(TRAIN_LENGTH, len(logs)))
