@@ -11,6 +11,9 @@ https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Sequence-Labeling/blob/master/
 
 import pandas as pd
 import numpy as np
+import mmap
+import io
+from functools import partial
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_recall_fscore_support
@@ -53,13 +56,16 @@ Parameters: embedding_dim, hidden_dim
 '''
 class FFTagger(nn.Module):
 
-    # TODO: try adding more hidden layers
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
         super(FFTagger, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
-        #self.embedding.weight = nn.Parameter(torch.tensor(embedding_matrix, dtype=torch.float32))
-        #self.embedding.weight.requires_grad = False
+        if EMBEDDING:
+            self.embedding.weight = nn.Parameter(torch.tensor(embedding_matrix, dtype=torch.float32))
+            self.embedding.weight.requires_grad = False
+
         self.hidden = nn.Linear(embedding_dim, hidden_dim)
+        if NUM_LAYERS > 1:
+            self.hidden2 = nn.Linear(hidden_dim, hidden_dim)
 
         # The linear layer that maps from hidden state space to tag space
         self.hidden2tag = nn.Linear(hidden_dim, tagset_size)
@@ -67,6 +73,8 @@ class FFTagger(nn.Module):
     def forward(self, sentence):
         embeds = self.embedding(sentence)
         hidden_out = self.hidden(embeds.view(len(sentence), 1, -1))
+        if NUM_LAYERS > 1:
+            hidden_out = self.hidden2(hidden_out.view(len(sentence), -1))
         tag_space = self.hidden2tag(hidden_out.view(len(sentence), -1))
         tag_scores = F.log_softmax(tag_space, dim=1)
         return tag_scores
@@ -126,6 +134,8 @@ def prepare_sequence(sentence, word_to_ix, tag_to_ix):
     word_idxs = []
     tag_idxs = []
     for word, POS, tag in sentence:
+        if LOWER:
+            word = word.lower()
         word_idxs.append(word_to_ix[word])
         tag_idxs.append(tag_to_ix[tag])
     return torch.tensor(word_idxs, dtype=torch.long), torch.tensor(tag_idxs, dtype=torch.long)
@@ -146,34 +156,95 @@ def load_word_dict(sentences):
     word_to_ix = {}
     for sent in sentences:
         for word, POS, tag in sent:
+            if LOWER:
+                word = word.lower()
             if word not in word_to_ix:
                 word_to_ix[word] = len(word_to_ix)
     return word_to_ix
+
+def load_word2vec(fname='data/word2vec.bin'):
+    fin = open(fname, 'rb')
+    header = fin.readline()
+    vocab_size, vector_size = map(int, header.split())
+
+    fbuf = mmap.mmap(fin.fileno(), 0, access=mmap.ACCESS_READ)
+    vecs_dict = {}
+    binary_len = np.dtype(np.float32).itemsize * vector_size
+    for i in range(vocab_size):
+        # read word
+        word = b''.join(iter(partial(fin.read, 1), b' ')).strip().decode('utf-8')
+        if LOWER:
+            word = word.lower()
+        # read vector
+        vec = np.frombuffer(fbuf, dtype=np.float32, offset=fin.tell(), count=vector_size)
+        vecs_dict[word] = vec
+        fin.seek(binary_len, io.SEEK_CUR)
+    return vecs_dict
+
+def load_fastText(fname='data/fastText.vec'):
+    fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+    n, d = map(int, fin.readline().split())
+    data = {}
+    for line in fin:
+        if LOWER:
+            line = line.lower()
+        tokens = line.rstrip().split(' ')
+        data[tokens[0]] = list(map(float, tokens[1:]))
+    return data
+
+def load_glove(fname='data/glove.6B.200d.txt'):
+    vecs = {} # maps words to vecs
+    for line in open(fname).readlines():
+        line = line.strip().split()
+        word = line[0]
+        if LOWER:
+            word = word.lower()
+        vec = [float(val) for val in line[1:]]
+        vecs[word] = vec
+    return vecs
+
 
 
 if __name__ == '__main__':
 
     ### LOADING THE DATA ###
-    df = pd.read_csv('../trainDataWithPOS.csv', encoding = "ISO-8859-1")
-    dfTest = pd.read_csv('../testDataWithPOS.csv', encoding = "ISO-8859-1")
+    df = pd.read_csv('data/trainDataWithPOS.csv', encoding = "ISO-8859-1")
+    dfTest = pd.read_csv('data/testDataWithPOS.csv', encoding = "ISO-8859-1")
     classes = np.unique(df.Tag.values).tolist()
     tag_to_ix = load_tag_dict(classes)
+    NUM_LAYERS = 1 # TODO: try different number of layers (e.g., 2)
     OUTPUT_DIM = len(classes)
     EMBEDDING_DIM = 50 # TODO: try different embedding dimensions (e.g., 100, 200, 300, etc.)
-    HIDDEN_DIM = 64 # TODO: try different hidden dimensions (e.g., 128, 256, 512, etc.)
-
-    # TODO: try lowercasing everything
+    HIDDEN_DIM = 64 # TODO: try different hidden dimensions (e.g., 32, 128, 256)
+    LOWER = True
+    EMBEDDING = "word2vec" # TODO: try glove, word2vec, fastText
+    if EMBEDDING == "glove":
+        vecs = load_glove()
+        EMBEDDING_DIM = 200
+    elif EMBEDDING == "word2vec":
+        vecs = load_word2vec()
+        EMBEDDING_DIM = 300
+    elif EMBEDDING == "fastText":
+        vecs = load_fastText()
+        EMBEDDING_DIM = 300
+    
     sentences = SentenceGetter(df).sentences
     testSentences = SentenceGetter(dfTest).sentences
     word_to_ix = load_word_dict(sentences)
-    # train_sents, test_sents = train_test_split(sentences, test_size=0.2, random_state=0, shuffle=True)
+
     train_sents = sentences
     test_sents = testSentences
     train_sents, val_sents = train_test_split(train_sents, test_size=0.2, random_state=0, shuffle=True)
 
     ### TRAINING THE MODEL ###
-    # TODO: load pre-trained embedding matrix
-    model = CNNTagger(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
+    if EMBEDDING:
+        embedding_matrix = np.zeros((len(word_to_ix), EMBEDDING_DIM))
+        for word in word_to_ix:
+                token_index = word_to_ix[word]
+                if word in vecs:
+                    embedding_matrix[token_index] = vecs[word]
+                     
+    model = FFTagger(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
     # for GPU training
     device = 'cpu'
     if torch.cuda.is_available():
@@ -242,4 +313,4 @@ if __name__ == '__main__':
         for label, prec, rec, f1 in zip(classes, prec, rec, f1):
             print(label, prec, rec, f1)
         print(precision_recall_fscore_support(true_y, pred_y, labels=labels, average='weighted'))
-        # TODO: compare test set results to CRF and majority vote (i.e., ensure same metric and test set)
+
