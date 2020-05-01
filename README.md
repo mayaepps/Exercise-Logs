@@ -37,6 +37,13 @@ Uses the csv from processCSVforCRF.py and uses sklearn Conditional Random Field 
 
 To run CRFwithPOS.py: `python3 CRFwithPOS.py`
 
+## Neural networks:
+
+### nnets.py
+Trains and tests one of the following neural networks: FF, CNN, LSTM
+
+`python nnets.py`
+
 ## Contextual embeddings:
 
 ### bert.py
