@@ -45,13 +45,25 @@ Uses the Transformers named entity recognition example on exercise logs. To use 
 `source venv/bin/activate`
 
 `python3 preprocess.py train.txt.tmp bert-base-cased 150 > train.txt`
+
 `python3 preprocess.py dev.txt.tmp bert-base-cased 150 > dev.txt`
+
 `python3 preprocess.py test.txt.tmp bert-base-cased 150 > test.txt`
 
 `python3 bert.py --data_dir ./ --labels ./labels.txt --output_dir models/bert-base-cased --max_seq_length 150 --num_train_epochs 3 --per_gpu_train_batch_size 32 --save_steps 750 --seed 1 --do_train --do_eval --do_predict --model_type bert --model_name_or_path bert-base-cased`
 
-where bert-base-cased is just one possible model. Here are the model options:
---model_type [bert, roberta, xlnet, albert, electra]
---model_name_or_path [bert-base-cased, bert-base-uncased, bert-large-cased, bert-large-uncased, bert-large-uncased-whole-word-masking, bert-large-cased-whole-word-masking, roberta-base, roberta-large, xlnet-base-cased, xlnet-large-cased, albert-base-v1, albert-large-v1, albert-xlarge-v1, albert-xxlarge-v1, albert-base-v2, albert-large-v2, albert-xlarge-v2, albert-xxlarge-v2, google/electra-small-discriminator, google-electra-base-discriminator, google-electra-large-discriminator]
+where `bert-base-cased` is just one possible model. Here are the model options:
 
-For evaluation only, remove the --do_train argument.
+`--model_type [bert, roberta, xlnet, albert, electra]`
+
+`--model_name_or_path [bert-base-cased, bert-base-uncased, bert-large-cased, bert-large-uncased, bert-large-uncased-whole-word-masking, bert-large-cased-whole-word-masking, roberta-base, roberta-large, xlnet-base-cased, xlnet-large-cased, albert-base-v1, albert-large-v1, albert-xlarge-v1, albert-xxlarge-v1, albert-base-v2, albert-large-v2, albert-xlarge-v2, albert-xxlarge-v2, google/electra-small-discriminator, google-electra-base-discriminator, google-electra-large-discriminator]`
+
+For evaluation only, remove the `--do_train argument`.
+
+## Intent detection:
+
+### intentClassifier.py
+
+Predicts the intent (i.e., either food or exercise logging) using statistical classifiers: random forest and logistic regression.
+
+`python intentClassifier.py`
