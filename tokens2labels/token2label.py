@@ -50,25 +50,7 @@ if __name__ == '__main__':
         elif run =='n':
             break
 
-    ### Trial 2: Multiclass logistic regression
-    #       Doesn't work properly because train and test are divided before converted
-    #       into dummy variables.
-    #       Not developed further because of bias in amount of labels
-
-    # print('\n\tTRIAL 2\n')
-    # if token == 'sentence':
-    #     print('Trial 2 not supported for sentence token because of the sparcity of the dummy variable')
-    # else:
-    #     while True:
-    #         run = input('Do you want to test Multiclass logistic regression? (y/n)\n\t')
-    #         if run == 'y':
-    #             print('The algorithm does not work properly because\ntrain and test are divided before converted into\ndummy variables')
-    #             multiclass_classifier, classification_report = logisticMulticlass(train_df, train_df, print_output=True, dummy_labels=dummy_labels)
-    #             break
-    #         elif run =='n':
-    #             break
-
-    ### Trial 4: Logistic Multiclass with bow
+    ### Trial 2: Logistic Multiclass with bow
     print('\n\tTRIAL 2\n')
     while True:
         run = input('Do you want to test logistic multiclass with BOW? (y/n)\n\t')
@@ -88,7 +70,7 @@ if __name__ == '__main__':
         elif run =='n':
             break
 
-    ### Trial 5: Logistic binary string match
+    ### Trial 4: Logistic binary string match
     print('\n\tTRIAL 4\n')
     while True:
         run = input('Do you want to test logistic binary string match with features? (y/n)\n\t')

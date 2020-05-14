@@ -23,22 +23,6 @@ if __name__ == "__main__":
 
     ### sentence2feeling and feeling2feeling are the same as before
 
-    tokens = ['sentence', 'feeling']
-
-    exercise_list_df = pd.read_pickle('../data/exercise-list-df.pkl')
-    label_options = [x for x in range(1,11)]
-
-    for token in tokens:
-        train_df = pd.read_pickle('../data/{}2{}-train-df.pkl'.format(token, 'feeling'))
-        test_df = pd.read_pickle('../data/{}2{}-test-df.pkl'.format(token, 'feeling'))
-
-        train_match_df = multiclass2binary(train_df, label_options)
-        test_match_df = multiclass2binary(test_df, label_options)
-
-        train_match_df.to_pickle('./data/{}2{}-match-train-df.pkl'.format(token, 'feeling'))
-        test_match_df.to_pickle('./data/{}2{}-match-test-df.pkl'.format(token, 'feeling'))
-
-
     ### sentence2exercise and exercise2exercise
     
     tokens = ['sentence', 'exercise']

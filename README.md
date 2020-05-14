@@ -74,3 +74,76 @@ For evaluation only, remove the `--do_train argument`.
 Predicts the intent (i.e., either food or exercise logging) using statistical classifiers: random forest and logistic regression.
 
 `python intentClassifier.py`
+
+# Token Labeling (tokens2labels)
+
+Contains all the information and files used for labeling the data. 
+
+### NLPAlgorithms.py
+
+Includes all the function definitions used for the exact string matching and logistic regression labeling ML models.
+
+Refer to [`token2label.py`](#token2label.py)
+
+### json2pickle.py
+
+Creates testing and training pandas dataframes from `testDataValues.json` and `trainDataValues.json`, and save locally with pickle binary encoding. Change label in line 14 and sent in line 15 to change labels and tokens to extract.
+
+### txt2pickle.py
+
+Convert .txt file into pandas dataframe and save with pickle binary encoding. Change origin file name in line 4, destination file in line 7 and columns headers in line 6. 
+
+### token2label.py
+
+Tests the functions declared in `NLPAlgorithms.py`. To run tests execute the file in the command window, and follow the instructions prompted by the program.
+
+## Neural-Networks
+
+Contains all the information and files used by the Nueral Networks to predict the labels. 
+
+### create-sets.py
+
+Creates the remaining datasets needed to execute the Nueral Networks. 
+
+### Str-Str-word-matching.py
+
+Build and train a Neural Network capable of determining whether the text and the label are a match or not. All encoding is done at word-level. 
+
+If running in cuda device, uncomment `.cuda()` in lines 88 and 89.
+
+To change the token being used changed the string in line 145. Only `'sentence'` and `'exercise'` are supported. 
+
+To build and train the model execute the file in the command line. 
+
+### Str-Str-word-matching.py
+
+Build and train a Neural Network capable of determining whether the text and the label are a match or not. All encoding is done at character-level. 
+
+If running in cuda device, uncomment `.cuda()` in lines 88 and 89.
+
+To change the token being used changed the string in line 145. Only `'sentence'` and `'exercise'` are supported. 
+
+To build and train the model execute the file in the command line. 
+
+### Str-Str-word-prediction.py
+
+Build and train a Neural Network capable of predicting the correct textual label for a text. All encoding is done at word-level. 
+
+To change the token being used changed the string in line 114. Only `'sentence'` and `'exercise'` are supported. 
+
+To build and train the model execute the file in the command line. 
+
+### Str-Int-word-prediction.py
+
+Build and train a Neural Network capable of predicting the correct numerical label for a text. All encoding is done at word-level. 
+
+To change the token being used changed the string in line 123. Only `'sentence'` and `'feeling'` are supported. 
+
+To chane the number of classes beig used change the `granuraility` param of the `PosDataReader` in line 121. Options are:
+
+*`'10-class'` for 10 classes
+*`'5-class'` for 5 classes
+*`'3-class'` for 3 classes
+*`'2-class'` for 2 classes
+
+To build and train the model execute the file in the command line. 
