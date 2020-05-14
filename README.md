@@ -141,9 +141,9 @@ To change the token being used changed the string in line 123. Only `'sentence'`
 
 To chane the number of classes beig used change the `granuraility` param of the `PosDataReader` in line 121. Options are:
 
-*`'10-class'` for 10 classes
-*`'5-class'` for 5 classes
-*`'3-class'` for 3 classes
-*`'2-class'` for 2 classes
+* `'10-class'` for 10 classes
+* `'5-class'` for 5 classes
+* `'3-class'` for 3 classes
+* `'2-class'` for 2 classes
 
 To build and train the model execute the file in the command line. 
