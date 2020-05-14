@@ -83,8 +83,6 @@ Contains all the information and files used for labeling the data.
 
 Includes all the function definitions used for the exact string matching and logistic regression labeling ML models.
 
-Refer to [`token2label.py`](#token2label.py)
-
 ### json2pickle.py
 
 Creates testing and training pandas dataframes from `testDataValues.json` and `trainDataValues.json`, and save locally with pickle binary encoding. Change label in line 14 and sent in line 15 to change labels and tokens to extract.
@@ -139,7 +137,7 @@ Build and train a Neural Network capable of predicting the correct numerical lab
 
 To change the token being used changed the string in line 123. Only `'sentence'` and `'feeling'` are supported. 
 
-To chane the number of classes beig used change the `granuraility` param of the `PosDataReader` in line 121. Options are:
+To chane the number of classes beig used change the `granularity` param of the `PosDataReader` in line 121. Options are:
 
 * `'10-class'` for 10 classes
 * `'5-class'` for 5 classes
