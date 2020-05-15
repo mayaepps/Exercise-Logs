@@ -1,5 +1,6 @@
 import pandas as pd
 from NLPAlgorithms import stringMatching, logisticMulticlass, logisticBinaryMatch, logisticMulticlassBOW, logisticStrComparisson
+from PredictingAlgorithms import logitsticBowPredictor, logitsticCompPredictor
 
 if __name__ == '__main__':
     ### Importing data and defining token2label program
@@ -65,17 +66,34 @@ if __name__ == '__main__':
     while True:
         run = input('Do you want to test logistic binary match with BOW? (y/n)\n\t')
         if run == 'y':
-            logisticBinaryMatch(train_df, test_df, str_label_options, print_output = True)
+            classifier, bow_vec, _, _ = logisticBinaryMatch(train_df, test_df, str_label_options, print_output = True)
+            while True:
+                run = input('Do you want to test the classifier in a multiclass labeling? (y/n)\n\t')
+                if run == 'y':
+                    tolerance = input('How many labels do you want to predict?\n\t')
+                    logitsticBowPredictor(classifier, bow_vec, test_df, str_label_options, tolerance=int(tolerance))
+                    break
+                elif run =='n':
+                    break
             break
         elif run =='n':
             break
+
 
     ### Trial 4: Logistic binary string match
     print('\n\tTRIAL 4\n')
     while True:
         run = input('Do you want to test logistic binary string match with features? (y/n)\n\t')
         if run == 'y':
-            logisticStrComparisson(train_df, test_df, str_label_options, print_output=True)
+            classifier, _, _ = logisticStrComparisson(train_df, test_df, str_label_options, print_output=True)
+            while True:
+                run = input('Do you want to test the classifier in a multiclass labeling? (y/n)\n\t')
+                if run == 'y':
+                    tolerance = input('How many labels do you want to predict?\n\t')
+                    logitsticCompPredictor(classifier, test_df, str_label_options, tolerance=int(tolerance))
+                    break
+                elif run =='n':
+                    break
             break
         elif run =='n':
             break

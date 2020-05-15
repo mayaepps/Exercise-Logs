@@ -125,7 +125,7 @@ def logisticBinaryMatch(train_data, test_data, label_options, print_output=False
         print('\nClassification Report:')
         print(classification_report_result)
 
-    return classifier, confusion_matrix_result, classification_report_result
+    return classifier, bow_vec, confusion_matrix_result, classification_report_result
 
 def data2BOW_multiclass(data, bow_vec, column):
     vec_data = []
