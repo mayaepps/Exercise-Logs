@@ -5,10 +5,11 @@ Date: 2020-08-04
 '''
 
 import csv
+import json
 from collections import defaultdict
 
 
-def read_data(filename):
+def read_tags_data(filename):
     '''Builds a dictionary mapping tokens to tag frequencies.'''
     token_tags = defaultdict(lambda: defaultdict(int))
 
@@ -29,8 +30,51 @@ def read_data(filename):
     return token_tags
 
 
-def compute_kappa(token_tags, tags):
+def read_exercise_data():
+    '''Builds a dictionary mapping tokens to exercise value frequencies.'''
+    token_vals = defaultdict(lambda: defaultdict(int))
+    train_data = json.load(open('trainDataValues.json'))
+    test_data = json.load(open('testDataValues.json'))
+    for data in [train_data, test_data]:
+        for sent_id in data:
+            exercise_tokens = data[sent_id]['exercise segment'].lower()
+            exercise = data[sent_id]['exercise value']
+            for token in exercise_tokens.split():
+                token_vals[token][exercise] += 1
+    return token_vals
+
+
+def read_feeling_data(binary=False):
+    '''
+    Builds a dictionary mapping tokens to feeling value frequencies.
+    The binary flag indicates whether to map values to positive or negative.
+    '''
+    token_vals = defaultdict(lambda: defaultdict(int))
+    train_data = json.load(open('trainDataValues.json'))
+    test_data = json.load(open('testDataValues.json'))
+    for data in [train_data, test_data]:
+        for sent_id in data:
+            feeling_tokens = data[sent_id]['feeling segment'].lower()
+            feeling = data[sent_id]['feeling value']
+            if binary:
+                if int(feeling) > 5:
+                    feeling = 1
+                else:
+                    feeling = 0
+            for token in feeling_tokens.split():
+                token_vals[token][feeling] += 1
+    return token_vals
+
+
+def compute_kappa(token_tags):
     '''Computes the kappa agreement score given each tag per token.'''
+
+    # Extract all possible tags/values.
+    tags = set()
+    for token in token_tags:
+        for tag in token_tags[token]:
+            tags.add(tag)
+
     P_mean = compute_P_mean(token_tags, tags)
     P_e = compute_P_e(token_tags, tags)
     kappa = (P_mean - P_e) / (1 - P_e)
@@ -84,12 +128,17 @@ def compute_P_j(tag, token_tags):
 
 
 if __name__ == '__main__':
-    tags = ['BE', 'IE', 'BF', 'IF', 'O']
-
-    token_tags = read_data('dataWithPOS.csv')
+    token_tags = read_tags_data('dataWithPOS.csv')
+    token_exercise_vals = read_exercise_data()
+    token_feeling_vals = read_feeling_data(binary=True)
 
     # Scores from 0.01-0.2 are slight, 0.21-0.4 fair, 0.41-0.6 moderate, 
     # 0.61-0.8 substantial, and 0.81-1 near perfect.
-    kappa = compute_kappa(token_tags, tags)
-    print('The kappa score for tags is:', kappa)
-    
+    kappa_tags = compute_kappa(token_tags)
+    print('The kappa score for tags is:', kappa_tags)
+
+    kappa_exercise = compute_kappa(token_exercise_vals)
+    print('The kappa score for exercise is:', kappa_exercise)
+
+    kappa_feeling = compute_kappa(token_feeling_vals)
+    print('The kappa score for feelings is:', kappa_feeling)
