@@ -27,11 +27,9 @@ import torch.optim as optim
 
 torch.manual_seed(1)
 
-'''
-Loads all sentences from the Pandas DataFrame as (word, POS, tag).
-'''
-class SentenceGetter(object):
 
+class SentenceGetter(object):
+    '''Loads all sentences from the Pandas DataFrame as (word, POS, tag).'''
     def __init__(self, data):
         self.n_sent = 1
         self.data = data
@@ -50,12 +48,12 @@ class SentenceGetter(object):
         except:
             return None
 
-'''
-Embedding followed by linear hidden layer and linear output layer with softmax.
-Parameters: embedding_dim, hidden_dim
-'''
-class FFTagger(nn.Module):
 
+class FFTagger(nn.Module):
+    '''
+    Embedding followed by linear hidden layer and linear output layer with softmax.
+    Parameters: embedding_dim, hidden_dim
+    '''
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
         super(FFTagger, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
@@ -79,12 +77,12 @@ class FFTagger(nn.Module):
         tag_scores = F.log_softmax(tag_space, dim=1)
         return tag_scores
 
-'''
-Single layer LSTM with embedding layer and linear output layer with softmax.
-Parameters: embedding_dim, hidden_dim
-'''
-class LSTMTagger(nn.Module):
 
+class LSTMTagger(nn.Module):
+    '''
+    Single layer LSTM with embedding layer and linear output layer with softmax.
+    Parameters: embedding_dim, hidden_dim
+    '''
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
         super(LSTMTagger, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
@@ -102,12 +100,12 @@ class LSTMTagger(nn.Module):
         tag_scores = F.log_softmax(tag_space, dim=1)
         return tag_scores
 
-'''
-Single layer CNN with given number of filters and filter sizes (i.e., width).
-Parameters: embedding_dim, num_filters, filter_sizes, drp
-'''
-class CNNTagger(nn.Module):
 
+class CNNTagger(nn.Module):
+    '''
+    Single layer CNN with given number of filters and filter sizes (i.e., width).
+    Parameters: embedding_dim, num_filters, filter_sizes, drp
+    '''
     def __init__(self, embedding_dim, num_filters, vocab_size, tagset_size, filter_sizes=[1,2,3,5], drp=0.1):
         super(CNNTagger, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
@@ -126,11 +124,8 @@ class CNNTagger(nn.Module):
         return tag_scores
 
 
-
-'''
-Converts a sequence of (word, POS, tag) tuples to word and tag indices.
-'''
 def prepare_sequence(sentence, word_to_ix, tag_to_ix):
+    '''Converts a sequence of (word, POS, tag) tuples to word and tag indices.'''
     word_idxs = []
     tag_idxs = []
     for word, POS, tag in sentence:
@@ -140,19 +135,17 @@ def prepare_sequence(sentence, word_to_ix, tag_to_ix):
         tag_idxs.append(tag_to_ix[tag])
     return torch.tensor(word_idxs, dtype=torch.long), torch.tensor(tag_idxs, dtype=torch.long)
 
-'''
-Returns a dictionary mapping each tag to its index.
-'''
+
 def load_tag_dict(classes):
+    '''Returns a dictionary mapping each tag to its index.'''
     tag_to_ix = {}
     for tag in classes:
         tag_to_ix[tag] = len(tag_to_ix)
     return tag_to_ix
 
-'''
-Returns a dictionary mapping each word to its index in the vocabulary.
-'''
+
 def load_word_dict(sentences):
+    '''Returns a dictionary mapping each word to its index in the vocabulary.'''
     word_to_ix = {}
     for sent in sentences:
         for word, POS, tag in sent:
@@ -163,6 +156,7 @@ def load_word_dict(sentences):
     return word_to_ix
 
 def load_word2vec(fname='data/word2vec.bin'):
+    '''Loads word2vec word vectors.'''
     fin = open(fname, 'rb')
     header = fin.readline()
     vocab_size, vector_size = map(int, header.split())
@@ -181,7 +175,9 @@ def load_word2vec(fname='data/word2vec.bin'):
         fin.seek(binary_len, io.SEEK_CUR)
     return vecs_dict
 
+
 def load_fastText(fname='data/fastText.vec'):
+    '''Loads FastText word vectors.'''
     fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
     n, d = map(int, fin.readline().split())
     data = {}
@@ -192,7 +188,9 @@ def load_fastText(fname='data/fastText.vec'):
         data[tokens[0]] = list(map(float, tokens[1:]))
     return data
 
+
 def load_glove(fname='data/glove.6B.200d.txt'):
+    '''Loads Glove word vectors.'''
     vecs = {} # maps words to vecs
     for line in open(fname).readlines():
         line = line.strip().split()
@@ -202,7 +200,6 @@ def load_glove(fname='data/glove.6B.200d.txt'):
         vec = [float(val) for val in line[1:]]
         vecs[word] = vec
     return vecs
-
 
 
 if __name__ == '__main__':
