@@ -9,6 +9,7 @@ https://mlwhiz.com/blog/2019/03/09/deeplearning_architectures_text_classificatio
 https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Sequence-Labeling/blob/master/train.py
 '''
 
+import conlleval
 import pandas as pd
 import numpy as np
 import mmap
@@ -27,11 +28,9 @@ import torch.optim as optim
 
 torch.manual_seed(1)
 
-'''
-Loads all sentences from the Pandas DataFrame as (word, POS, tag).
-'''
-class SentenceGetter(object):
 
+class SentenceGetter(object):
+    '''Loads all sentences from the Pandas DataFrame as (word, POS, tag).'''
     def __init__(self, data):
         self.n_sent = 1
         self.data = data
@@ -50,12 +49,12 @@ class SentenceGetter(object):
         except:
             return None
 
-'''
-Embedding followed by linear hidden layer and linear output layer with softmax.
-Parameters: embedding_dim, hidden_dim
-'''
-class FFTagger(nn.Module):
 
+class FFTagger(nn.Module):
+    '''
+    Embedding followed by linear hidden layer and linear output layer with softmax.
+    Parameters: embedding_dim, hidden_dim
+    '''
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
         super(FFTagger, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
@@ -67,7 +66,7 @@ class FFTagger(nn.Module):
         if NUM_LAYERS > 1:
             self.hidden2 = nn.Linear(hidden_dim, hidden_dim)
 
-        # The linear layer that maps from hidden state space to tag space
+        # The linear layer that maps from hidden state space to tag space.
         self.hidden2tag = nn.Linear(hidden_dim, tagset_size)
 
     def forward(self, sentence):
@@ -79,12 +78,12 @@ class FFTagger(nn.Module):
         tag_scores = F.log_softmax(tag_space, dim=1)
         return tag_scores
 
-'''
-Single layer LSTM with embedding layer and linear output layer with softmax.
-Parameters: embedding_dim, hidden_dim
-'''
-class LSTMTagger(nn.Module):
 
+class LSTMTagger(nn.Module):
+    '''
+    Single layer LSTM with embedding layer and linear output layer with softmax.
+    Parameters: embedding_dim, hidden_dim
+    '''
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
         super(LSTMTagger, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
@@ -102,12 +101,12 @@ class LSTMTagger(nn.Module):
         tag_scores = F.log_softmax(tag_space, dim=1)
         return tag_scores
 
-'''
-Single layer CNN with given number of filters and filter sizes (i.e., width).
-Parameters: embedding_dim, num_filters, filter_sizes, drp
-'''
-class CNNTagger(nn.Module):
 
+class CNNTagger(nn.Module):
+    '''
+    Single layer CNN with given number of filters and filter sizes (i.e., width).
+    Parameters: embedding_dim, num_filters, filter_sizes, drp
+    '''
     def __init__(self, embedding_dim, num_filters, vocab_size, tagset_size, filter_sizes=[1,2,3,5], drp=0.1):
         super(CNNTagger, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
@@ -126,11 +125,8 @@ class CNNTagger(nn.Module):
         return tag_scores
 
 
-
-'''
-Converts a sequence of (word, POS, tag) tuples to word and tag indices.
-'''
 def prepare_sequence(sentence, word_to_ix, tag_to_ix):
+    '''Converts a sequence of (word, POS, tag) tuples to word and tag indices.'''
     word_idxs = []
     tag_idxs = []
     for word, POS, tag in sentence:
@@ -140,19 +136,19 @@ def prepare_sequence(sentence, word_to_ix, tag_to_ix):
         tag_idxs.append(tag_to_ix[tag])
     return torch.tensor(word_idxs, dtype=torch.long), torch.tensor(tag_idxs, dtype=torch.long)
 
-'''
-Returns a dictionary mapping each tag to its index.
-'''
+
 def load_tag_dict(classes):
+    '''Returns a dictionary mapping each tag to its index.'''
     tag_to_ix = {}
+    ix_to_tag = {}
     for tag in classes:
         tag_to_ix[tag] = len(tag_to_ix)
-    return tag_to_ix
+        ix_to_tag[tag_to_ix[tag]] = tag
+    return tag_to_ix, ix_to_tag
 
-'''
-Returns a dictionary mapping each word to its index in the vocabulary.
-'''
+
 def load_word_dict(sentences):
+    '''Returns a dictionary mapping each word to its index in the vocabulary.'''
     word_to_ix = {}
     for sent in sentences:
         for word, POS, tag in sent:
@@ -163,6 +159,7 @@ def load_word_dict(sentences):
     return word_to_ix
 
 def load_word2vec(fname='data/word2vec.bin'):
+    '''Loads word2vec word vectors.'''
     fin = open(fname, 'rb')
     header = fin.readline()
     vocab_size, vector_size = map(int, header.split())
@@ -171,17 +168,17 @@ def load_word2vec(fname='data/word2vec.bin'):
     vecs_dict = {}
     binary_len = np.dtype(np.float32).itemsize * vector_size
     for i in range(vocab_size):
-        # read word
         word = b''.join(iter(partial(fin.read, 1), b' ')).strip().decode('utf-8')
         if LOWER:
             word = word.lower()
-        # read vector
         vec = np.frombuffer(fbuf, dtype=np.float32, offset=fin.tell(), count=vector_size)
         vecs_dict[word] = vec
         fin.seek(binary_len, io.SEEK_CUR)
     return vecs_dict
 
+
 def load_fastText(fname='data/fastText.vec'):
+    '''Loads FastText word vectors.'''
     fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
     n, d = map(int, fin.readline().split())
     data = {}
@@ -192,8 +189,10 @@ def load_fastText(fname='data/fastText.vec'):
         data[tokens[0]] = list(map(float, tokens[1:]))
     return data
 
+
 def load_glove(fname='data/glove.6B.200d.txt'):
-    vecs = {} # maps words to vecs
+    '''Loads Glove word vectors.'''
+    vecs = {} # Maps words to vecs.
     for line in open(fname).readlines():
         line = line.strip().split()
         word = line[0]
@@ -204,20 +203,19 @@ def load_glove(fname='data/glove.6B.200d.txt'):
     return vecs
 
 
-
 if __name__ == '__main__':
 
     ### LOADING THE DATA ###
-    df = pd.read_csv('data/trainDataWithPOS.csv', encoding = "ISO-8859-1")
-    dfTest = pd.read_csv('data/testDataWithPOS.csv', encoding = "ISO-8859-1")
+    df = pd.read_csv('trainDataWithPOS.csv', encoding = "ISO-8859-1")
+    dfTest = pd.read_csv('testDataWithPOS.csv', encoding = "ISO-8859-1")
     classes = np.unique(df.Tag.values).tolist()
-    tag_to_ix = load_tag_dict(classes)
+    tag_to_ix, ix_to_tag = load_tag_dict(classes)
     NUM_LAYERS = 1 # TODO: try different number of layers (e.g., 2)
     OUTPUT_DIM = len(classes)
     EMBEDDING_DIM = 50 # TODO: try different embedding dimensions (e.g., 100, 200, 300, etc.)
     HIDDEN_DIM = 64 # TODO: try different hidden dimensions (e.g., 32, 128, 256)
     LOWER = True
-    EMBEDDING = "word2vec" # TODO: try glove, word2vec, fastText
+    EMBEDDING = None # TODO: try glove, word2vec, fastText
     if EMBEDDING == "glove":
         vecs = load_glove()
         EMBEDDING_DIM = 200
@@ -245,7 +243,7 @@ if __name__ == '__main__':
                     embedding_matrix[token_index] = vecs[word]
                      
     model = FFTagger(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
-    # for GPU training
+    # Determine whether using CCPU or GPU for training.
     device = 'cpu'
     if torch.cuda.is_available():
         model.cuda()
@@ -262,13 +260,13 @@ if __name__ == '__main__':
             # Step 1. Clear out any accumulated gradients.
             model.zero_grad()
 
-            # Step 2. Convert data into tensors of word and tag indices
+            # Step 2. Convert data into tensors of word and tag indices.
             x, y = prepare_sequence(sentence, word_to_ix, tag_to_ix)
 
             # Step 3. Run the forward pass
             tag_scores = model(x.to(device))
 
-            # Step 4. Compute the loss and gradients, and update the parameters
+            # Step 4. Compute the loss and gradients, and update the parameters.
             loss = loss_function(tag_scores, y.to(device))
             loss.backward()
             optimizer.step()
@@ -283,7 +281,7 @@ if __name__ == '__main__':
             val_loss = np.mean(val_losses)
         print('epoch {}, loss {}'.format(epoch, val_loss))
 
-        # early stopping: break out if loss after 10 epochs is worse
+        # Early stopping: break out if loss after 10 epochs is worse.
         if prev_loss and val_loss > prev_loss:
             break
 
@@ -294,14 +292,14 @@ if __name__ == '__main__':
     with torch.no_grad():
         true_y = []
         pred_y = []
-        # get argmax (i.e., tag with highest prob) for each word in test set
+        # Get argmax (i.e., tag with highest prob) for each word in test set.
         for sentence in val_sents:
             x, y = prepare_sequence(sentence, word_to_ix, tag_to_ix)
             tag_scores = model(x.to(device)).cpu().data.numpy()
             true_y.extend(y.data.numpy())
             pred_y.extend(np.argmax(tag_scores, axis=1))
 
-        # compute precision, recall, and F1 score (with and without 'O' tag)
+        # Compute precision, recall, and F1 score (with and without 'O' tag).
         prec, rec, f1, _ = precision_recall_fscore_support(true_y, pred_y)
         for label, prec, rec, f1 in zip(classes, prec, rec, f1):
             print(label, prec, rec, f1)
@@ -313,4 +311,10 @@ if __name__ == '__main__':
         for label, prec, rec, f1 in zip(classes, prec, rec, f1):
             print(label, prec, rec, f1)
         print(precision_recall_fscore_support(true_y, pred_y, labels=labels, average='weighted'))
+
+        # Use CoNLL-style evaluation (per-entity F1, rather than per-token).
+        true_y = [ix_to_tag[ix] for ix in true_y]
+        pred_y = [ix_to_tag[ix] for ix in pred_y]
+        conlleval.evaluate(true_y, pred_y)
+
 

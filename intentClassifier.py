@@ -5,6 +5,12 @@ Date: 4/21/2020
 Reference: https://www.analyticsvidhya.com/blog/2018/04/a-comprehensive-guide-to-understand-and-implement-text-classification-in-python/
 '''
 
+import pandas
+import numpy
+import string
+import json
+import textblob
+
 from sklearn import model_selection, preprocessing, linear_model, naive_bayes, metrics, svm
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.model_selection import train_test_split
@@ -15,19 +21,17 @@ import pandas, numpy, string, json, textblob
 from keras.preprocessing import text, sequence
 from keras import layers, models, optimizers
 
-'''
-Tokenizer that also does lowercasing and stemming.
-'''
+
 def textblob_tokenizer(str_input):
+    '''Tokenizer that also does lowercasing and stemming.'''
     blob = textblob.TextBlob(str_input.lower())
     tokens = blob.words
     words = [token.stem() for token in tokens]
     return words
 
-'''
-Extracts the input exercise logs, and outputs the label "exercise".
-'''
+
 def get_exercise_data():
+    '''Extracts the input exercise logs, and outputs the label "exercise".'''
     labels, sents = [], []
     train_data = json.load(open('data/trainDataValues.json'))
     test_data = json.load(open('data/testDataValues.json'))
@@ -42,10 +46,9 @@ def get_exercise_data():
             sents.append(tokens)
     return sents, labels
 
-'''
-Extracts the input food logs, and outputs the label "food".
-'''
+
 def get_food_data(sents, labels):
+    '''Extracts the input food logs, and outputs the label "food".'''
     num_exercise_sents = len(sents) # keep the data balanced
     for line in open('data/food_logs').readlines()[:num_exercise_sents]:
         sents.append(line.strip())
@@ -53,15 +56,11 @@ def get_food_data(sents, labels):
     return sents, labels
 
 
-'''
-Trains and tests the given classifier on given input features and output labels.
-'''
-def train_model(classifier, feature_vector_train, label, feature_vector_valid, is_neural_net=False, epochs=1):
-    for epoch in range(epochs):
-        # fit the training dataset on the classifier
-        classifier.fit(feature_vector_train, label)
+def train_model(classifier, feature_vector_train, label, feature_vector_valid, is_neural_net=False):
+    '''Trains and tests the given classifier on given input features and output labels.'''
+    classifier.fit(feature_vector_train, label)
 
-    # predict the labels on validation dataset
+    # Predict the labels on validation dataset.
     predictions = classifier.predict(feature_vector_valid)
 
     if is_neural_net:
@@ -69,10 +68,10 @@ def train_model(classifier, feature_vector_train, label, feature_vector_valid, i
 
     return metrics.accuracy_score(predictions, valid_y)
 
-'''
-Trains and tests a given model on various feature sets.
-'''
+
 def ablation_study(model, model_name):
+    '''Trains and tests a given model on various feature sets.'''
+    
     # Count vectors
     accuracy = train_model(model, xtrain_count, train_y, xvalid_count)
     print("\n" + model_name, "Count vectors: ", accuracy)
@@ -235,12 +234,10 @@ if __name__ == '__main__':
                                      ('bigram vectorizer', tfidf_vect_bigram),
                                      ('trigram vectorizer', tfidf_vect_trigram),
                                      ('char vectorizer', tfidf_vect_ngram_chars)])
+
         tfidf_vect_ngrams_counts.fit(trainDF['text'])
         xtrain_tfidf_ngrams_counts = tfidf_vect_ngrams_counts.transform(train_x)
         xvalid_tfidf_ngrams_counts = tfidf_vect_ngrams_counts.transform(valid_x)
-
-
-
 
         ########### TRAIN AND TEST CLASSIFIERS #############
 
@@ -248,9 +245,8 @@ if __name__ == '__main__':
         ablation_study(linear_model.LogisticRegression(), "Logistic Regression")
         ablation_study(ensemble.RandomForestClassifier(), "Random Forest")
 
-    # create a tokenizer
     '''
-    
+    # create a tokenizer
     token = text.Tokenizer()
     token.fit_on_texts(trainDF['text'])
     word_index = token.word_index
@@ -268,3 +264,4 @@ if __name__ == '__main__':
     accuracy = train_model(rnn, train_seq_x, train_y, valid_seq_x, is_neural_net=True, epochs=3)
     print("LSTM", accuracy)
     '''
+
