@@ -414,7 +414,10 @@ if __name__ == '__main__':
 
     loss_function = nn.NLLLoss()
     # TODO: try different learning rates (e.g., lr=0.001, 0.001, etc.)
-    optimizer = optim.SGD(model.parameters(), lr=0.1)
+    if CRF:
+        optimizer = optim.SGD(model.parameters(), lr=0.01, weight_decay=1e-4)
+    else:
+        optimizer = optim.SGD(model.parameters(), lr=0.1)
     prev_loss = None
     epochs = 1000
 
