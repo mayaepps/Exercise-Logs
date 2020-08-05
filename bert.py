@@ -21,6 +21,7 @@ import glob
 import logging
 import os
 import random
+import conlleval
 
 import numpy as np
 import torch
@@ -311,8 +312,10 @@ def evaluate(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""
         "f1": f1_score(out_label_list, preds_list),
     }
 
-    print(out_label_list)
-    print(preds_list)
+    # Use CoNLL-style evaluation (per-entity F1, rather than per-token).
+    joined_true_tags = [tag for sublist in out_label_list for tag in sublist]
+    joined_pred_tags = [tag for sublist in preds_list for tag in sublist]
+    conlleval.evaluate(joined_true_tags, joined_pred_tags)
     
     logger.info("***** Eval results %s *****", prefix)
     for key in sorted(results.keys()):
