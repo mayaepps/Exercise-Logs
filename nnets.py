@@ -314,7 +314,7 @@ def load_word_dict(sentences):
                 word_to_ix[word] = len(word_to_ix)
     return word_to_ix
 
-def load_word2vec(fname='data/word2vec.bin'):
+def load_word2vec(lower=True, fname='data/word2vec.bin'):
     '''Loads word2vec word vectors.'''
     fin = open(fname, 'rb')
     header = fin.readline()
@@ -325,7 +325,7 @@ def load_word2vec(fname='data/word2vec.bin'):
     binary_len = np.dtype(np.float32).itemsize * vector_size
     for i in range(vocab_size):
         word = b''.join(iter(partial(fin.read, 1), b' ')).strip().decode('utf-8')
-        if LOWER:
+        if lower:
             word = word.lower()
         vec = np.frombuffer(fbuf, dtype=np.float32, offset=fin.tell(), count=vector_size)
         vecs_dict[word] = vec
@@ -333,26 +333,26 @@ def load_word2vec(fname='data/word2vec.bin'):
     return vecs_dict
 
 
-def load_fastText(fname='data/fastText.vec'):
+def load_fastText(lower=True, fname='data/fastText.vec'):
     '''Loads FastText word vectors.'''
     fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
     n, d = map(int, fin.readline().split())
     data = {}
     for line in fin:
-        if LOWER:
+        if lower:
             line = line.lower()
         tokens = line.rstrip().split(' ')
         data[tokens[0]] = list(map(float, tokens[1:]))
     return data
 
 
-def load_glove(fname='data/glove.6B.200d.txt'):
+def load_glove(lower=True, fname='data/glove.6B.200d.txt'):
     '''Loads Glove word vectors.'''
     vecs = {} # Maps words to vecs.
     for line in open(fname).readlines():
         line = line.strip().split()
         word = line[0]
-        if LOWER:
+        if lower:
             word = word.lower()
         vec = [float(val) for val in line[1:]]
         vecs[word] = vec
@@ -379,13 +379,13 @@ if __name__ == '__main__':
         tag_to_ix[START_TAG] = len(tag_to_ix)
         tag_to_ix[STOP_TAG] = len(tag_to_ix)
     if EMBEDDING == "glove":
-        vecs = load_glove()
+        vecs = load_glove(LOWER)
         EMBEDDING_DIM = 200
     elif EMBEDDING == "word2vec":
-        vecs = load_word2vec()
+        vecs = load_word2vec(LOWER)
         EMBEDDING_DIM = 300
     elif EMBEDDING == "fastText":
-        vecs = load_fastText()
+        vecs = load_fastText(LOWER)
         EMBEDDING_DIM = 300
     
     sentences = SentenceGetter(df).sentences
