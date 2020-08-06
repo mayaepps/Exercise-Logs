@@ -20,7 +20,8 @@ from itertools import islice
 from sklearn.metrics import classification_report
 from sklearn_crfsuite import metrics
 
-import conlleval
+from itertools import chain
+from conlleval import evaluate
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -163,10 +164,16 @@ def get_y_test():
 create_all_words_dict()
 create_final_dict()
 
-print("Percent Correct:", test())
 classes = ["BE", "BF", "IE", "IF", "O"]
 y_true, y_pred = get_y_test()
-print(metrics.flat_classification_report(y_true, y_pred, labels=classes))
+# print(metrics.flat_classification_report(y_true, y_pred, labels=classes))
+
+
+# converting 2d list into 1d using chain.from_iterables
+flattened_y_true = list(chain.from_iterable(y_true))
+flattened_y_pred = list(chain.from_iterable(y_pred))
+
+evaluate(flattened_y_true, flattened_y_pred)
 
 #interactive mode! Type your own logs and see what it predicts! (type "exit" to end interactive mode)
 #
