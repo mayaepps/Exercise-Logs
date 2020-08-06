@@ -16,11 +16,11 @@ def read_tags_data(filename):
     with open(filename) as csvfile:
         csvreader = csv.reader(csvfile)
 
-        # List of all the fields.                                                                                     
+        # List of all the fields.
         fields = csvreader.__next__()
         word_index = fields.index('Word')
         tag_index = fields.index('Tag')
-        
+
         for row in csvreader:
             if len(row) == 0:
                 continue
@@ -128,11 +128,11 @@ def compute_P_j(tag, token_tags):
 
 
 if __name__ == '__main__':
-    token_tags = read_tags_data('dataWithPOS.csv')
+    token_tags = read_tags_data('data/dataWithPOS.csv')
     token_exercise_vals = read_exercise_data()
     token_feeling_vals = read_feeling_data(binary=True)
 
-    # Scores from 0.01-0.2 are slight, 0.21-0.4 fair, 0.41-0.6 moderate, 
+    # Scores from 0.01-0.2 are slight, 0.21-0.4 fair, 0.41-0.6 moderate,
     # 0.61-0.8 substantial, and 0.81-1 near perfect.
     kappa_tags = compute_kappa(token_tags)
     print('The kappa score for tags is:', kappa_tags)

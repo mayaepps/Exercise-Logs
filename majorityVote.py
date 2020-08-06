@@ -20,11 +20,13 @@ from itertools import islice
 from sklearn.metrics import classification_report
 from sklearn_crfsuite import metrics
 
+import conlleval
+
 
 nlp = spacy.load("en_core_web_sm")
 
-train_data_file_path = "../trainMajorityVoteData.csv"
-test_data_file_path = "../testMajorityVoteData.csv"
+train_data_file_path = "data/trainMajorityVoteData.csv"
+test_data_file_path = "data/testMajorityVoteData.csv"
 
 all_words = {}
 final_words = {}
@@ -161,12 +163,10 @@ def get_y_test():
 create_all_words_dict()
 create_final_dict()
 
-
 print("Percent Correct:", test())
 classes = ["BE", "BF", "IE", "IF", "O"]
 y_true, y_pred = get_y_test()
 print(metrics.flat_classification_report(y_true, y_pred, labels=classes))
-
 
 #interactive mode! Type your own logs and see what it predicts! (type "exit" to end interactive mode)
 #

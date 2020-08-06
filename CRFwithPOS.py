@@ -13,8 +13,8 @@ from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
 from collections import Counter
 
-df = pd.read_csv('../trainDataWithPOS.csv', encoding = "ISO-8859-1")
-dfTest = pd.read_csv('../testDataWithPOS.csv', encoding = "ISO-8859-1")
+df = pd.read_csv('data/trainDataWithPOS.csv', encoding = "ISO-8859-1")
+dfTest = pd.read_csv('data/testDataWithPOS.csv', encoding = "ISO-8859-1")
 
 df = df.fillna(method='ffill')
 dfTest = dfTest.fillna(method='ffill')

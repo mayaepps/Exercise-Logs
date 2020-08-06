@@ -9,15 +9,15 @@ tags = []
 sentence_ids = []
 maxlen = 0 # longest sequence of words
 
-with open('dataWithPOS.csv') as csvfile:
+with open('../data/dataWithPOS.csv') as csvfile:
     csvreader = csv.reader(csvfile)
 
-    #list of all the fields                                                                                      
+    #list of all the fields
     fields = csvreader.__next__()
     print(fields)
     word_index = fields.index('Word')
     tag_index = fields.index('Tag')
-    
+
     for row in csvreader:
         if len(row) == 0:
             continue
@@ -30,9 +30,9 @@ print(tags[:10], len(tags))
 print(sentence_ids[:10], len(sentence_ids))
 
 # write to new .txt.tmp data files
-trainf = open('train.txt.tmp', 'w')
-devf = open('dev.txt.tmp', 'w')
-testf = open('test.txt.tmp', 'w')
+trainf = open('../data/train.txt.tmp', 'w')
+devf = open('../data/dev.txt.tmp', 'w')
+testf = open('../data/test.txt.tmp', 'w')
 
 dev_start_index = int(len(tokens) * 0.8)
 test_start_index = int(len(tokens) * 0.9)

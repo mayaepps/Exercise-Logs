@@ -362,8 +362,8 @@ def load_glove(fname='data/glove.6B.200d.txt'):
 if __name__ == '__main__':
 
     ### LOADING THE DATA ###
-    df = pd.read_csv('trainDataWithPOS.csv', encoding = "ISO-8859-1")
-    dfTest = pd.read_csv('testDataWithPOS.csv', encoding = "ISO-8859-1")
+    df = pd.read_csv('data/trainDataWithPOS.csv', encoding = "ISO-8859-1")
+    dfTest = pd.read_csv('data/testDataWithPOS.csv', encoding = "ISO-8859-1")
     classes = np.unique(df.Tag.values).tolist()
     tag_to_ix, ix_to_tag = load_tag_dict(classes)
     NUM_LAYERS = 1 # TODO: try different number of layers (e.g., 2)
@@ -387,7 +387,7 @@ if __name__ == '__main__':
     elif EMBEDDING == "fastText":
         vecs = load_fastText()
         EMBEDDING_DIM = 300
-    
+
     sentences = SentenceGetter(df).sentences
     testSentences = SentenceGetter(dfTest).sentences
     word_to_ix = load_word_dict(sentences)
@@ -403,7 +403,7 @@ if __name__ == '__main__':
                 token_index = word_to_ix[word]
                 if word in vecs:
                     embedding_matrix[token_index] = vecs[word]
-                     
+
     model = BiLSTM_CRF(EMBEDDING_DIM, HIDDEN_DIM, len(word_to_ix), len(tag_to_ix))
     # Determine whether using CPU or GPU for training.
     device = 'cpu'
@@ -492,5 +492,3 @@ if __name__ == '__main__':
         true_y = [ix_to_tag[ix] for ix in true_y]
         pred_y = [ix_to_tag[ix] for ix in pred_y]
         conlleval.evaluate(true_y, pred_y)
-
-
