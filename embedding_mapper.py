@@ -12,14 +12,14 @@ from nltk.stem import PorterStemmer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-def get_x_y(data, do_binarize=True, full_sentence=True):
+def get_x_y(data):
     '''Loads exercise/feeling tokens and labels, given input data.'''
     exercise_tokens, feeling_tokens = [], []
     exercise_labels, feeling_labels = [], []
     for sent_id in data:
         tokens = data[sent_id]['sentence']
         # Option to use the full sentence, instead of just the segments.
-        if full_sentence:
+        if FULL_SENTENCE:
             exercise_tokens.append(tokens.lower())
             feeling_tokens.append(tokens.lower())
         else:
@@ -29,9 +29,9 @@ def get_x_y(data, do_binarize=True, full_sentence=True):
         feeling_value = int(data[sent_id]['feeling value'])
 
         # If the do_binarize flag is set, feeling labels are set to 0 or 1.
-        if do_binarize and feeling_value > 5:
+        if DO_BINARIZE and feeling_value > 5:
             feeling_labels.append(1)
-        elif do_binarize:
+        elif DO_BINARIZE:
             feeling_labels.append(0)
         else:
             feeling_labels.append(feeling_value)
