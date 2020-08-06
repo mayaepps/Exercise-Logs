@@ -12,24 +12,29 @@ from nltk.stem import PorterStemmer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-def get_x_y(data):
-    '''
-    Loads exercise/feeling segments and labels, given input data.
-    Binarizes feeling labels.
-    '''
+def get_x_y(data, do_binarize=True, full_sentence=True):
+    '''Loads exercise/feeling tokens and labels, given input data.'''
     exercise_tokens, feeling_tokens = [], []
     exercise_labels, feeling_labels = [], []
     for sent_id in data:
         tokens = data[sent_id]['sentence']
-        # TODO: use full sequence of tokens instead of segments
-        exercise_tokens.append(data[sent_id]['exercise segment'].lower())
-        feeling_tokens.append(data[sent_id]['feeling segment'].lower())
-        exercise_labels.append(data[sent_id]['exercise value'].lower())
-        feeling_value = data[sent_id]['feeling value']
-        if int(feeling_value) > 5:
-            feeling_labels.append(1)
+        # Option to use the full sentence, instead of just the segments.
+        if full_sentence:
+            exercise_tokens.append(tokens.lower())
+            feeling_tokens.append(tokens.lower())
         else:
+            exercise_tokens.append(data[sent_id]['exercise segment'].lower())
+            feeling_tokens.append(data[sent_id]['feeling segment'].lower())
+        exercise_labels.append(data[sent_id]['exercise value'].lower())
+        feeling_value = int(data[sent_id]['feeling value'])
+
+        # If the do_binarize flag is set, feeling labels are set to 0 or 1.
+        if do_binarize and feeling_value > 5:
+            feeling_labels.append(1)
+        elif do_binarize:
             feeling_labels.append(0)
+        else:
+            feeling_labels.append(feeling_value)
     return exercise_tokens, feeling_tokens, exercise_labels, feeling_labels
 
 
@@ -73,6 +78,10 @@ def get_vec(word_vecs, text, do_stem=False):
 
 if __name__ == '__main__':
 
+    DO_BINARIZE = True
+    FULL_SENTENCE = False
+    EMBEDDING = "glove"
+
     ################## LOAD THE DATA ##################
 
     stemmer = PorterStemmer()
@@ -85,16 +94,18 @@ if __name__ == '__main__':
 
     # Gets each unique exercise label and feeling tokens (seen in training).
     all_ex_labels = set(tr_ex_vals + test_ex_vals)
-    all_feel_labels = {} # maps from feeling segment to numeric value (0 or 1)
+    all_feel_labels = {} # maps from feeling segment to numeric value
     for feel_seg, feel_val in zip(tr_feel_text, tr_feel_vals):
         all_feel_labels[feel_seg] = feel_val
 
     ############### EMBEDDING SIMILARITY ###############
 
-    # TODO: try word2vec and fastText
-    word_vecs = nnets.load_glove()
-    #word_vecs = nnets.load_word2vec()
-    #word_vecs = nnets.load_fastText()
+    if EMBEDDING == "glove":
+        word_vecs = nnets.load_glove()
+    elif EMBEDDING == "word2vec":
+        word_vecs = nnets.load_word2vec()
+    elif EMBEDDING == "fastText":
+        word_vecs = nnets.load_fastText()
 
     ex_label_vecs = load_label_vecs(word_vecs, all_ex_labels)
     feel_vecs = load_label_vecs(word_vecs, all_feel_labels.keys())
@@ -114,14 +125,14 @@ if __name__ == '__main__':
         ex_pred = nearest_neighbor(ex_embed, ex_label_vecs)
         feel_pred = nearest_neighbor(feel_embed, feel_vecs)
 
-        # Convert feeling description to a numeric value (0 or 1).
+        # Convert feeling description to a numeric value.
         if feel_pred is not None:
             feel_pred = all_feel_labels[feel_pred]
-        print('\n' + ex_seg)
-        print(ex_pred)
+        #print('\n' + ex_seg)
+        #print(ex_pred)
 
-        print('\n' + feel_seg)
-        print(feel_pred)
+        #print('\n' + feel_seg)
+        #print(feel_pred)
 
         # Increments number of correct matches.
         if ex_pred == ex_true:
@@ -129,6 +140,10 @@ if __name__ == '__main__':
         if feel_pred == feel_true:
             top_1_feel += 1
 
-    print('Exercise embedding top-1 recall:', top_1_ex / total_ex)
-    print('Feeling embedding top-1 (binary) recall:', top_1_feel / total_feel)
+    print("Embedding type:", EMBEDDING)
+    print("Do binarize:", DO_BINARIZE)
+    print("Full sentence:", FULL_SENTENCE)
+
+    print('\nExercise embedding top-1 recall:', top_1_ex / total_ex)
+    print('Feeling embedding top-1 recall:', top_1_feel / total_feel)
 
