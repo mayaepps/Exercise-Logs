@@ -15,7 +15,8 @@ from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
 from collections import Counter
 
-import conlleval
+from itertools import chain
+from conlleval import evaluate
 
 df = pd.read_csv('data/trainDataWithPOS.csv', encoding = "ISO-8859-1")
 dfTest = pd.read_csv('data/testDataWithPOS.csv', encoding = "ISO-8859-1")
@@ -134,5 +135,15 @@ crf.fit(X_train, y_train)
 
 
 y_pred = crf.predict(X_test)
-print(metrics.flat_classification_report(y_test, y_pred, labels=new_classes))
-print(metrics.flat_classification_report(y_test, y_pred, labels=classes))
+
+np_y_pred = np.array(y_pred);
+np_y_test = np.array(y_test);
+
+# converting 2d list into 1d using chain.from_iterables
+flattened_y_pred = list(chain.from_iterable(y_pred))
+flattened_y_test = list(chain.from_iterable(y_test))
+
+# print(metrics.flat_classification_report(y_test, y_pred, labels=new_classes))
+# print(metrics.flat_classification_report(y_test, y_pred, labels=classes))
+
+evaluate(flattened_y_test, flattened_y_pred)
