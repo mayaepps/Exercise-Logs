@@ -12,11 +12,11 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 
-input_csv_file_path = "unprocessedFinalData.csv"
-train_output_csv_file_path = "trainDataWithPOS.csv"
-test_output_csv_file_path = "testDataWithPOS.csv"
-train_output_values_file_path = "trainDataValues.json"
-test_output_values_file_path = "testDataValues.json"
+input_csv_file_path = "../data/unprocessedFinalData.csv"
+train_output_csv_file_path = "../data/trainDataWithPOS.csv"
+test_output_csv_file_path = "../data/testDataWithPOS.csv"
+train_output_values_file_path = "../data/trainDataValues.json"
+test_output_values_file_path = "../data/testDataValues.json"
 
 logs = []
 exerciseTags = []

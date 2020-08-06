@@ -15,11 +15,11 @@ feelingTags = []
 exerciseTagValues = []
 feelingTagValues = []
 
-TRAIN_DATA_PATH = '../trainMajorityVoteData.csv'
-TEST_DATA_PATH = '../testMajorityVoteData.csv'
+TRAIN_DATA_PATH = '../data/trainMajorityVoteData.csv'
+TEST_DATA_PATH = '../data/testMajorityVoteData.csv'
 
 
-with open("../../data/unprocessedFinalData.csv") as csvfile:
+with open("../data/unprocessedFinalData.csv") as csvfile:
     csvreader = csv.reader(csvfile)
 
     #list of all the fields
